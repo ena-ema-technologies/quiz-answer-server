@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const nodemailer = require('nodemailer');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.luubiof.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -54,7 +54,7 @@ async function run() {
 
     const resultCollection = client.db("personalityTest").collection("allQuizResult");
     const usersCollection = client.db("personalityTest").collection("adminUsers");
-    const increaseNumberCOllection = client.db("personalityTest").collection("increaseNumberCOllection")
+    const increaseNumberCOllection = client.db("personalityTest").collection("increaseNumberCollection")
 
 
 
@@ -79,18 +79,23 @@ async function run() {
 
 
 
-    app.patch("/number-increase", async (req, res) => {
+    app.patch("/number-increase/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const newNum = req.body;
+      const updateDoc = {
+        $set:{
+          totalNumber: parseInt(newNum?.totalNumber)
+        }
+      }
 
-      const increaseNumber = req.query.increaseNumber;
-      console.log(increaseNumber)
-      const query = {increaseNumber: increaseNumber}
-      const result = await increaseNumberCOllection.insertOne(query)
+      const result = await increaseNumberCOllection.updateOne(filter, updateDoc)
       res.send(result)
 
     })
 
-    app.get("/number-increase", (req, res) => {
-      const result = increaseNumberCOllection.find().toArray()
+    app.get("/total-test-number", async(req, res) => {
+      const result = await increaseNumberCOllection.findOne({})
       res.send(result)
     })
 
